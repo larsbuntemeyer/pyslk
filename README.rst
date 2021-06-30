@@ -28,6 +28,7 @@ Examples
 
 .. code-block:: python
 
+    import pyslk as slk
     slk.ls("/hsm/g300046", recursive=True, decode="pandas").head()
     
 .. image:: docs/pics/pandas-example.png
