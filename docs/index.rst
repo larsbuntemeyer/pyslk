@@ -7,6 +7,7 @@ Welcome to pyslk's documentation!
 
    readme
    installation
+   usage
    contributing
    authors
    history
