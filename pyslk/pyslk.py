@@ -10,7 +10,8 @@ to_pandas = False
 
 def _decode(text, mode="split", format="utf-8"):
     if mode=="split":
-        return text.decode(format).split('\n')
+        split = text.decode(format).split('\n')
+        return [s for s in split if s]
     return text.decode(format)
 
 
@@ -49,7 +50,7 @@ def _handle_output(output, decode=True):
     return output[0]
 
 
-def _decode_ls(output, path=""):
+def _decode_ls(output, path=None):
     """decode a filesystem output"""
     rows = []
     for line in output:
@@ -59,7 +60,9 @@ def _decode_ls(output, path=""):
         if len(split) == 7:
             split.insert(3, '')
         if len(split) == 8:
-            split[-1] = os.path.join(path, split[-1])
+            # if path is a path and not a search id...
+            if type(path) is str:
+                split[-1] = os.path.join(path, split[-1])
             _parse_date(split)
             rows.append(split)
             #rows.append(split)
@@ -95,8 +98,29 @@ def _ls_to_pandas(output, path):
     return df.replace('', np.nan).dropna(axis=1, how='all')
        
 
-def archive(path, target, recursive=False):
-    """Upload files in a directory and optionally tag resources
+def archive(path, target, recursive=False, exclude=True):
+    """Upload files in a directory and optionally tag resources.
+    
+    This command transfers files and directories from the Linux device 
+    to the HSM system. Appending the recursive options performs a full recursive 
+    archival as `cp -r` would do. A progress indicator is shown until the 
+    transfer is complete.
+    When `exclude=True` is set all files and folders which names start 
+    with . are ignored. All files in such folders are also ignored. 
+    This helps omitting folders of your version control software or config 
+    files of your system.
+    
+    Parameters
+    ----------
+    path: str
+        File or directory that should be archived.
+    target: str
+        Target path or directory on the HSM system.
+    recursive: bool
+        Perform recursive archiving of subdirectories.
+    exclude: bool
+        Exclude hidden files and directories.
+    
     """
     command = [slk_exe, "archive", path, target]
     if recursive: command.append("-R")
@@ -125,22 +149,22 @@ def group(x):
 
 def ls(path = "/", recursive = False, decode = "split"):
     """List results from search id or GNS path
-    
+
     Parameters
     ----------
-    path: str
-        Search path.
+    path: str or int
+        Search path or id.
     recursive: bool
         If True, search recursively.
     decode: str
         Decode mode, can either be True, \"split\" or \"pandas\".
-        
+
     Returns
     -------
     Search results.
-    
+
     """
-    command = [slk_exe, "list", path]
+    command = [slk_exe, "list", str(path)]
     if recursive: command.append("-R")
     output = _handle_output(_execute(command),
                             decode=decode)
@@ -179,10 +203,44 @@ def retrieve(x):
     pass
 
 
-def search(x):
+def search(group=None, name=None, user=None, out='ls', decode='split'):
     """Creates search and returns search id
+    
+    Parameters
+    ----------
+    group: str
+         group attribute to search.
+    name: str
+         filename to search.
+    user: str
+         user id to search.
+    out: str
+         Output format, can either be `ls` or `id`.
+    decode: str
+         Output format if `ls` is used, can be `split` or `pandas`.
+         
+    Returns
+    -------
+    
+    Search ID or list result depending on out attribute.
+    
     """
-    pass
+    command = [slk_exe, "search"]
+    if group:
+        command.extend(["-group", group])
+    if name:
+        command.extend(["-name", name])
+    if user:
+        command.extend(["-user", user])
+    output = _handle_output(_execute(command),
+                            decode="split")
+    # parse output into integer search id
+    ID = int(output[0].split(":")[1])
+    if out == 'ls':
+        return ls(ID, decode=decode)
+    elif out == 'id':
+        return ID
+    return ID
 
 
 def tag(x):
