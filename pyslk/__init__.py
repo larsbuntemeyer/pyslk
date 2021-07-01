@@ -6,4 +6,4 @@ __version__ = '0.1.0'
 
 
 
-from .pyslk import  *
+from .pyslk import  ls, search, archive, retrieve

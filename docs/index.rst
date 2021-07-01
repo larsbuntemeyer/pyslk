@@ -7,11 +7,10 @@ Welcome to pyslk's documentation!
 
    readme
    installation
-   usage
-   modules
    contributing
    authors
    history
+   api
 
 Indices and tables
 ==================

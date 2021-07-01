@@ -50,8 +50,13 @@ def _handle_output(output, decode=True):
     return output[0]
 
 
-def _decode_ls(output, path=None):
-    """decode a filesystem output"""
+def _parse_ls(output, path=None):
+    """Parsed the output from a list command.
+    
+    The parsing is very much static and fixed to the current
+    list output of slk-3.1.36. 
+    
+    """
     rows = []
     for line in output:
         if line.startswith("/"):
@@ -93,7 +98,7 @@ def _create_df(rows):
 def _ls_to_pandas(output, path):
     import pandas as pd
     import numpy as np
-    lines = _decode_ls(output, path)
+    lines = _parse_ls(output, path)
     df = pd.DataFrame(lines)#.dropna(axis=1, how='all')
     return df.replace('', np.nan).dropna(axis=1, how='all')
        
