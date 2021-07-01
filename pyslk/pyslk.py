@@ -20,7 +20,8 @@ def _execute(commands):
                      stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
     if (process.returncode > 0):
-        raise Exception(_decode(stdout)+_decode(stderr))
+        raise Exception(_decode(stdout)+_decode(stderr)+
+                        ['returncode: '+str(process.returncode)])
     return stdout, stderr
 
 
@@ -94,11 +95,15 @@ def _ls_to_pandas(output, path):
     return df.replace('', np.nan).dropna(axis=1, how='all')
        
 
-def archive(x):
+def archive(path, target, recursive=False):
     """Upload files in a directory and optionally tag resources
     """
-    pass
-
+    command = [slk_exe, "archive", path, target]
+    if recursive: command.append("-R")
+    output = _handle_output(_execute(command),
+                            decode=decode)
+    return output
+    #slk archive -R /lustre_dir /tape_dir
 
 def chmod(x):
     """Change the access mode of a resource or namespace
@@ -120,6 +125,20 @@ def group(x):
 
 def ls(path = "/", recursive = False, decode = "split"):
     """List results from search id or GNS path
+    
+    Parameters
+    ----------
+    path: str
+        Search path.
+    recursive: bool
+        If True, search recursively.
+    decode: str
+        Decode mode, can either be True, \"split\" or \"pandas\".
+        
+    Returns
+    -------
+    Search results.
+    
     """
     command = [slk_exe, "list", path]
     if recursive: command.append("-R")
