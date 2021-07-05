@@ -2,10 +2,12 @@
 
 import os
 import subprocess
+from getpass import getpass
 
 
 slk_exe = '/sw/rhel6-x64/slk/slk-3.1.36/bin/slk'
-to_pandas = False
+decode = 'split'
+format = "utf-8"
 
 
 def _decode(text, mode="split", format="utf-8"):
@@ -26,20 +28,6 @@ def _execute(commands):
     return stdout, stderr
 
 
-#def execute(command):
-#    return subprocess.check_call(command)
-
-def login():
-    return execute([slk_exe, "login"])
-
-def test():
-    return decode(execute([slk_exe])[0])
-
-
-def user():
-    p = subprocess.Popen(['slk', 'login'], 
-                     stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-    return p.communicate(input='')
 
 
 def _handle_output(output, decode=True):
@@ -103,6 +91,22 @@ def _ls_to_pandas(output, path):
     return df.replace('', np.nan).dropna(axis=1, how='all')
        
 
+def login(user=None, password=None):
+    """Not sure how to pass user and password"""
+    if user is None:
+        print('Enter username:', end=' ')
+        user = input().encode('utf-8')
+    if password is None:
+        password = getpass('Enter password for %s: ' % user)
+    p = subprocess.Popen(['slk', 'login'], 
+                         stdin=subprocess.PIPE, 
+                         stdout=subprocess.PIPE,
+                         shell=False)
+    p.stdin.write()
+    p.stdin.flush()
+    return p.communicate()
+    
+    
 def archive(path, target, recursive=False, exclude=True):
     """Upload files in a directory and optionally tag resources.
     
@@ -178,12 +182,6 @@ def ls(path = "/", recursive = False, decode = "split"):
     return output
 
 
-def login():
-    """Login using your LDAP username and password
-    """
-    pass
-
-
 def move():
     """Move namespaces/files from one parent folder to another
     """
@@ -202,10 +200,26 @@ def rename():
     pass
 
 
-def retrieve(x):
-    """Download files for search and start WFE jobs for files on
+def retrieve(path, target=".", recursive=False):
+    """Download files for search and start WFE jobs for 
+    files on tape using search id or GNS path
+    
+    Parameters
+    ----------
+    path: str
+        File or directory that should be retrieved.
+    target: str
+        Target path or directory on the file system.
+    recursive: bool
+        Perform recursive archiving of subdirectories.
+    
     """
-    pass
+    command = [slk_exe, "retrieve", str(path), target]
+    if recursive: command.append("-R")
+    output =  _handle_output(_execute(command), decode='split')
+    if output: 
+        return output
+
 
 
 def search(group=None, name=None, user=None, out='ls', decode='split'):
