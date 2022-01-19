@@ -2,6 +2,8 @@
 pyslk
 =====
 
+**NOTE**: This package is deprecated and replaced by `DKRZ's own python binding <https://gitlab.dkrz.de/hsm-tools/pyslk>`_. Some code is moved there.
+
 
 .. image:: https://img.shields.io/pypi/v/pyslk.svg
         :target: https://pypi.python.org/pypi/pyslk
